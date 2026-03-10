@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOI-700 — Tähe uurimistöö</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:wght@400;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0f18; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const starData = {
+  name: "TOI-700", spectralType: "M2 V", starClass: "Punane kääbus",
+  constellation: "Dorado (Kuldkala)", distance: 101.4, mass: 0.416,
+  radius: 0.421, temperature: 3459, luminosity: 0.023, age: 1.5, activity: "Väga madal",
+};
+
+const planets = [
+  { name: "TOI-700 b", radius: 1.04, period: 9.98, sma: 0.068, type: "Kivine", hz: false },
+  { name: "TOI-700 c", radius: 2.65, period: 16.05, sma: 0.093, type: "Sub-Neptuun", hz: false },
+  { name: "TOI-700 e", radius: 0.93, period: 27.8, sma: 0.134, type: "Kivine", hz: true },
+  { name: "TOI-700 d", radius: 1.16, period: 37.42, sma: 0.163, type: "Kivine", hz: true },
+];
+
+const hzInner = 0.12;
+const hzOuter = 0.31;
+
+function BarComparison({ label, starVal, sunVal, unit, color, maxVal }) {
+  const max = maxVal || Math.max(starVal, sunVal) * 1.15;
+  const starPct = (starVal / max) * 100;
+  const sunPct = (sunVal / max) * 100;
+  const ratio = (starVal / sunVal).toFixed(2);
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#b0b8c8", textTransform: "uppercase", letterSpacing: 1.2 }}>{label}</span>
+        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: "#6e7a91" }}>
+          suhe: <span style={{ color: color, fontWeight: 700 }}>{ratio}×</span>
+        </span>
+      </div>
+      <div style={{ position: "relative", marginBottom: 5 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: color, width: 65, fontWeight: 600 }}>TOI-700</span>
+          <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 6, height: 22, overflow: "hidden" }}>
+            <div style={{ width: `${starPct}%`, height: "100%", background: `linear-gradient(90deg, ${color}44, ${color})`, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 8, minWidth: 50 }}>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: "#fff", fontWeight: 700 }}>{starVal} {unit}</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#f5c542", width: 65, fontWeight: 600 }}>Päike</span>
+          <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 6, height: 22, overflow: "hidden" }}>
+            <div style={{ width: `${sunPct}%`, height: "100%", background: "linear-gradient(90deg, #f5c54244, #f5c542)", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 8, minWidth: 50 }}>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: "#1a1e2e", fontWeight: 700 }}>{sunVal} {unit}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StarSizeVisual() {
+  const sunSize = 120;
+  const toiSize = sunSize * starData.radius;
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 40, padding: "20px 0 10px" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ width: sunSize, height: sunSize, borderRadius: "50%", background: "radial-gradient(circle at 35% 35%, #fff7c2, #f5c542 40%, #e6a817 70%, #c4880a)", boxShadow: "0 0 40px #f5c54266, 0 0 80px #f5c54222" }} />
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#f5c542", marginTop: 10, fontWeight: 600 }}>Päike</div>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: "#6e7a91" }}>1.0 R☉</div>
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ width: toiSize, height: toiSize, borderRadius: "50%", background: "radial-gradient(circle at 35% 35%, #ff9988, #d4483a 40%, #a82e24 70%, #7a1a14)", boxShadow: "0 0 30px #d4483a44, 0 0 60px #d4483a22", margin: `${(sunSize - toiSize) / 2}px auto 0` }} />
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#d4483a", marginTop: 10, fontWeight: 600 }}>TOI-700</div>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: "#6e7a91" }}>0.421 R☉</div>
+      </div>
+    </div>
+  );
+}
+
+function HabitableZoneDiagram() {
+  const maxAU = 0.4;
+  const hzLeftPct = (hzInner / maxAU) * 100;
+  const hzWidthPct = ((hzOuter - hzInner) / maxAU) * 100;
+  return (
+    <div style={{ padding: "10px 0 0" }}>
+      <div style={{ position: "relative", height: 120, marginBottom: 10 }}>
+        <div style={{ position: "absolute", left: `${hzLeftPct}%`, width: `${hzWidthPct}%`, top: 0, bottom: 30, background: "linear-gradient(90deg, #22c55e22, #22c55e33, #22c55e22)", borderRadius: 8, border: "1px solid #22c55e44" }}>
+          <div style={{ position: "absolute", top: 4, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#22c55e", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Elukõlblik tsoon</div>
+        </div>
+        <div style={{ position: "absolute", left: 0, top: "50%", transform: "translate(-30%, -50%)", width: 26, height: 26, borderRadius: "50%", background: "radial-gradient(circle at 35% 35%, #ff9988, #d4483a)", boxShadow: "0 0 15px #d4483a66", zIndex: 10 }} />
+        {planets.map((p, i) => {
+          const pctX = (p.sma / maxAU) * 100;
+          return (
+            <div key={i} style={{ position: "absolute", left: `${pctX}%`, top: "50%", transform: "translate(-50%, -50%)", textAlign: "center", zIndex: 5 }}>
+              <div style={{ width: Math.max(8, p.radius * 8), height: Math.max(8, p.radius * 8), borderRadius: "50%", background: p.hz ? "#22c55e" : "#6e7a91", boxShadow: p.hz ? "0 0 8px #22c55e66" : "0 0 5px #6e7a9133", margin: "0 auto 4px", border: p.hz ? "1.5px solid #22c55eaa" : "1.5px solid #6e7a9155" }} />
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: p.hz ? "#22c55e" : "#8a94a8", whiteSpace: "nowrap", fontWeight: 600 }}>{p.name.split(" ")[1]}</div>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: "#555d70" }}>{p.sma} AU</div>
+            </div>
+          );
+        })}
+        <div style={{ position: "absolute", bottom: 25, left: 0, right: 0, height: 1, background: "#2a2f42" }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#8a94a8" }}>Elukõlblikus tsoonis</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#6e7a91" }} />
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#8a94a8" }}>Väljaspool tsooni</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TOI700Report() {
+  const [activeTab, setActiveTab] = useState("overview");
+  const tabs = [
+    { id: "overview", label: "Põhiandmed" },
+    { id: "compare", label: "Võrdlus Päikesega" },
+    { id: "analysis", label: "Analüüs" },
+  ];
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0d0f18", fontFamily: "'DM Sans', sans-serif", color: "#cdd5e4", padding: "32px 20px" }}>
+      <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center", marginBottom: 36 }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <div style={{ width: 14, height: 14, borderRadius: "50%", background: "radial-gradient(circle at 35% 35%, #ff9988, #d4483a)", boxShadow: "0 0 10px #d4483a88" }} />
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: "#d4483a", letterSpacing: 2, textTransform: "uppercase", fontWeight: 700 }}>Tähe uurimistöö</span>
+        </div>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 42, fontWeight: 800, background: "linear-gradient(135deg, #e8edf5, #8a94a8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: "0 0 8px", lineHeight: 1.1 }}>TOI-700</h1>
+        <p style={{ fontSize: 14, color: "#6e7a91", lineHeight: 1.6, maxWidth: 500, margin: "0 auto" }}>Punane kääbus tähtkujus Dorado · M2 V · 101,4 valgusaastat Maast</p>
+      </div>
+
+      <div style={{ maxWidth: 680, margin: "0 auto 28px", display: "flex", gap: 4, background: "#141826", borderRadius: 10, padding: 4 }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id)} style={{ flex: 1, padding: "10px 0", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, letterSpacing: 0.3, background: activeTab === t.id ? "#1e2338" : "transparent", color: activeTab === t.id ? "#e8edf5" : "#555d70", transition: "all 0.2s ease", boxShadow: activeTab === t.id ? "0 2px 8px #0006" : "none" }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ maxWidth: 680, margin: "0 auto" }}>
+
+        {activeTab === "overview" && (
+          <div>
+            <div style={{ background: "#141826", borderRadius: 14, padding: 28, marginBottom: 20, border: "1px solid #1e2338" }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#e8edf5", margin: "0 0 20px", fontWeight: 700 }}>Tähe põhiandmed</h2>
+              <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 2px" }}>
+                <tbody>
+                  {[
+                    ["Nimetus", "TOI-700 (TIC 150428135)"],
+                    ["Spektritüüp", "M2 V (punane kääbus)"],
+                    ["Tähtkuju", "Dorado (Kuldkala)"],
+                    ["Kaugus Maast", "101,4 valgusaastat (31,1 pc)"],
+                    ["Mass", "0,416 M☉ (8,27 × 10²⁹ kg)"],
+                    ["Raadius", "0,421 R☉ (293 159 km)"],
+                    ["Efektiivne temperatuur", "3 459 K"],
+                    ["Heledus", "0,023 L☉ (2,3% Päikesest)"],
+                    ["Vanus", "~1,5 miljardit aastat"],
+                    ["Täheline aktiivsus", "Väga madal (0 leeki 11 sektoris)"],
+                    ["Planeetide arv", "4 kinnitatud eksoplaneeti"],
+                  ].map(([key, val], i) => (
+                    <tr key={i}>
+                      <td style={{ padding: "9px 12px", fontSize: 13, color: "#8a94a8", fontWeight: 500, background: i % 2 === 0 ? "#181d30" : "transparent", borderRadius: i % 2 === 0 ? "6px 0 0 6px" : 0, width: "40%", verticalAlign: "top" }}>{key}</td>
+                      <td style={{ padding: "9px 12px", fontSize: 13, color: "#cdd5e4", fontWeight: 600, fontFamily: "'Space Mono', monospace", background: i % 2 === 0 ? "#181d30" : "transparent", borderRadius: i % 2 === 0 ? "0 6px 6px 0" : 0 }}>{val}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ background: "#141826", borderRadius: 14, padding: 28, border: "1px solid #1e2338" }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#e8edf5", margin: "0 0 20px", fontWeight: 700 }}>Planeedisüsteem</h2>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      {["Planeet", "Raadius (R⊕)", "Periood (d)", "Kaugus (AU)", "Tüüp", "Elukõlblik tsoon"].map((h, i) => (
+                        <th key={i} style={{ padding: "10px 10px", textAlign: "left", color: "#6e7a91", fontWeight: 600, borderBottom: "1px solid #1e2338", letterSpacing: 0.5, textTransform: "uppercase", fontSize: 10, fontFamily: "'DM Sans', sans-serif" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {planets.map((p, i) => (
+                      <tr key={i} style={{ background: p.hz ? "#22c55e0a" : "transparent" }}>
+                        <td style={{ padding: "10px 10px", fontWeight: 700, color: p.hz ? "#22c55e" : "#cdd5e4", fontFamily: "'Space Mono', monospace" }}>{p.name}</td>
+                        <td style={{ padding: "10px 10px", fontFamily: "'Space Mono', monospace", color: "#b0b8c8" }}>{p.radius}</td>
+                        <td style={{ padding: "10px 10px", fontFamily: "'Space Mono', monospace", color: "#b0b8c8" }}>{p.period}</td>
+                        <td style={{ padding: "10px 10px", fontFamily: "'Space Mono', monospace", color: "#b0b8c8" }}>{p.sma}</td>
+                        <td style={{ padding: "10px 10px", color: "#8a94a8" }}>{p.type}</td>
+                        <td style={{ padding: "10px 10px" }}>
+                          {p.hz ? (
+                            <span style={{ background: "#22c55e22", color: "#22c55e", padding: "3px 10px", borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>Jah</span>
+                          ) : (
+                            <span style={{ background: "#6e7a9122", color: "#6e7a91", padding: "3px 10px", borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>Ei</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "compare" && (
+          <div>
+            <div style={{ background: "#141826", borderRadius: 14, padding: 28, marginBottom: 20, border: "1px solid #1e2338" }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#e8edf5", margin: "0 0 6px", fontWeight: 700 }}>Suuruse võrdlus</h2>
+              <p style={{ fontSize: 12, color: "#6e7a91", margin: "0 0 12px" }}>Tähtede raadiuste visuaalne kõrvutus proportsionaalselt</p>
+              <StarSizeVisual />
+            </div>
+            <div style={{ background: "#141826", borderRadius: 14, padding: 28, border: "1px solid #1e2338" }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#e8edf5", margin: "0 0 24px", fontWeight: 700 }}>Parameetrite võrdlus</h2>
+              <BarComparison label="Mass" starVal={0.416} sunVal={1.0} unit="M☉" color="#d4483a" />
+              <BarComparison label="Raadius" starVal={0.421} sunVal={1.0} unit="R☉" color="#e07555" />
+              <BarComparison label="Temperatuur" starVal={3459} sunVal={5778} unit="K" color="#c9553e" maxVal={6500} />
+              <BarComparison label="Heledus" starVal={0.023} sunVal={1.0} unit="L☉" color="#a82e24" />
+              <BarComparison label="Vanus" starVal={1.5} sunVal={4.6} unit="Ga" color="#b84030" />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
+                {[
+                  { label: "Mass", value: "2,4× väiksem", icon: "⚖️" },
+                  { label: "Raadius", value: "2,4× väiksem", icon: "📏" },
+                  { label: "Temperatuur", value: "1,7× külmem", icon: "🌡️" },
+                  { label: "Heledus", value: "43× nõrgem", icon: "💡" },
+                ].map((c, i) => (
+                  <div key={i} style={{ background: "#181d30", borderRadius: 10, padding: "14px 16px", border: "1px solid #1e2338" }}>
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>{c.icon}</div>
+                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: "#d4483a", fontWeight: 700 }}>{c.value}</div>
+                    <div style={{ fontSize: 11, color: "#6e7a91", marginTop: 2 }}>kui Päike ({c.label})</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "analysis" && (
+          <div>
+            <div style={{ background: "#141826", borderRadius: 14, padding: 28, marginBottom: 20, border: "1px solid #1e2338" }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#e8edf5", margin: "0 0 8px", fontWeight: 700 }}>Elukõlbliku tsooni diagramm</h2>
+              <p style={{ fontSize: 12, color: "#6e7a91", margin: "0 0 16px" }}>Planeetide paiknemine tähe suhtes (AU) ja elukõlbliku tsooni piirid</p>
+              <HabitableZoneDiagram />
+            </div>
+            <div style={{ background: "#141826", borderRadius: 14, padding: 28, marginBottom: 20, border: "1px solid #1e2338" }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#e8edf5", margin: "0 0 20px", fontWeight: 700 }}>Analüüs: Tähe mõju planeetidele</h2>
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontSize: 14, color: "#d4483a", fontWeight: 700, margin: "0 0 8px", fontFamily: "'DM Sans', sans-serif" }}>1. Temperatuur ja kiirgus</h3>
+                <p style={{ fontSize: 13, color: "#b0b8c8", lineHeight: 1.75, margin: 0 }}>TOI-700 efektiivne temperatuur on 3 459 K — see on vaid 60% Päikese pinnatemperatuurist. Selle tulemusel on tähe heledus ainult 2,3% Päikese omast. See tähendab, et elukõlblik tsoon paikneb tähele palju lähemal: 0,12–0,31 AU (Päikese puhul ~0,95–1,7 AU). Planeedid peavad tähele oluliselt lähemal orbiitima, et saada piisavalt soojust vedela vee säilitamiseks.</p>
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontSize: 14, color: "#d4483a", fontWeight: 700, margin: "0 0 8px", fontFamily: "'DM Sans', sans-serif" }}>2. Elukõlblik tsoon ja planeedid</h3>
+                <p style={{ fontSize: 13, color: "#b0b8c8", lineHeight: 1.75, margin: 0 }}>TOI-700 süsteemis asuvad kaks planeeti elukõlblikus tsoonis: TOI-700 e (0,134 AU, saab 127% Maa kiirgusvoogust) ja TOI-700 d (0,163 AU, saab 86% Maa kiirgusvoogust). Mõlemad on Maa-suurused kivised planeedid — TOI-700 d oli esimene TESS-i avastatud Maa-suurune planeet elukõlblikus tsoonis. Tasakaalutemperatuur TOI-700 d jaoks on ~268 K (−5 °C), mis kasvuhooneefektiga võib ulatuda ~290 K (~17 °C).</p>
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontSize: 14, color: "#d4483a", fontWeight: 700, margin: "0 0 8px", fontFamily: "'DM Sans', sans-serif" }}>3. Loodete sidumine</h3>
+                <p style={{ fontSize: 13, color: "#b0b8c8", lineHeight: 1.75, margin: 0 }}>Kuna planeedid asuvad tähele väga lähedal (alla 0,17 AU), on kõik neli planeeti tõenäoliselt loodete sidumise seisundis — üks pool on alati tähe poole suunatud. See loob äärmuslikud temperatuurierinevused planeedi päeva- ja ööpoole vahel. Atmosfääri olemasolu korral võiks soojuse ümberjaotamine seda efekti pehmendada.</p>
+              </div>
+              <div style={{ marginBottom: 0 }}>
+                <h3 style={{ fontSize: 14, color: "#d4483a", fontWeight: 700, margin: "0 0 8px", fontFamily: "'DM Sans', sans-serif" }}>4. Tähe aktiivsus — positiivne tegur</h3>
+                <p style={{ fontSize: 13, color: "#b0b8c8", lineHeight: 1.75, margin: 0 }}>TOI-700 paistab silma erakordselt madala tähelise aktiivsusega — TESS ei tuvastanud 11 vaatlusperioodi jooksul ühtegi valge valguse leeki. See on oluline, sest M-kääbustähed on sageli väga aktiivsed ja nende leegid võivad hävitada planeetide atmosfääre. TOI-700 madal aktiivsus suurendab märkimisväärselt võimalust, et planeetide d ja e atmosfäärid on säilinud, muutes süsteemi üheks lootustandvamaks elukõlblikkuse kandidaadiks.</p>
+              </div>
+            </div>
+            <div style={{ background: "#141826", borderRadius: 14, padding: 28, border: "1px solid #1e2338" }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: "#e8edf5", margin: "0 0 18px", fontWeight: 700 }}>Kokkuvõte — põhinumbrid</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                {[
+                  { val: "0,12–0,31", unit: "AU", desc: "Elukõlblik tsoon" },
+                  { val: "2", unit: "planeeti", desc: "Elukõlblikus tsoonis" },
+                  { val: "268 K", unit: "(−5 °C)", desc: "TOI-700 d Teq" },
+                  { val: "86%", unit: "Maa voogust", desc: "TOI-700 d saab" },
+                  { val: "0", unit: "leeki", desc: "11 vaatlusperioodis" },
+                  { val: "~1,5", unit: "Ga", desc: "Süsteemi vanus" },
+                ].map((c, i) => (
+                  <div key={i} style={{ background: "#181d30", borderRadius: 10, padding: "14px 12px", textAlign: "center", border: "1px solid #1e2338" }}>
+                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, color: "#e8edf5", fontWeight: 700 }}>{c.val}</div>
+                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: "#d4483a", fontWeight: 600, marginTop: 2 }}>{c.unit}</div>
+                    <div style={{ fontSize: 10, color: "#6e7a91", marginTop: 4 }}>{c.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: "#3a4055", fontFamily: "'Space Mono', monospace" }}>
+              Allikad: NASA TESS, Gilbert et al. (2020), Stellar Catalog, ExoplanetKyoto · Koostatud 2026
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<TOI700Report />);
+</script>
+</body>
+</html>
